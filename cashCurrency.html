@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+    <body>
+        <h1>Cash Currencies</h1>
+        {{if .IsError}}
+            <div>
+                <span>{{.Error}}</span>
+            </div>
+        {{else}}
+            {{range .CashCurrencies.Currencies}}
+                <div>
+                    <b>{{.Ccy}} / {{.BaseCcy}}</b>:
+                    <span><b>Buy</b>: {{.Buy}}</span>
+                    <span><b>Sale</b>: {{.Sale}}</span>
+                </div>
+            {{end}}
+        {{end}}
+    </body>
+</html>
