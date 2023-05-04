@@ -10,6 +10,8 @@ import (
 	"strings"
 	"sync"
 	"text/template"
+
+	tgbotapi "gopkg.in/telegram-bot-api.v4"
 )
 
 const (
@@ -127,6 +129,116 @@ func getCashCurrencies(wg *sync.WaitGroup, workerNum int, ch chan Result, url st
 	fmt.Println("workerNum finished = ", workerNum)
 }
 
+const (
+	BotToken   = "6039361130:AAGwrJcWrrIRtU96TtFAT4gX91A3kVDrLGk"
+	WebhookURL = "https://app-golang-bot.herokuapp.com"
+)
+
+var bank map[string]string = map[string]string{
+	"Privat": PRIVAT_CASH_CURRENCY_API_URL,
+}
+
+func useBot() error {
+	bot, err := tgbotapi.NewBotAPI(BotToken)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println("Authorized on account", bot.Self.UserName)
+
+	_, err = bot.SetWebhook(tgbotapi.NewWebhook(WebhookURL))
+	if err != nil {
+		return err
+	}
+	updates := bot.ListenForWebhook("/bot")
+
+	for update := range updates {
+		if url, ok := bank[update.Message.Text]; ok {
+			ccy, err := getAllCashCurrencies(url)
+			if err != nil {
+				return err
+			}
+			mes := ""
+			for _, c := range ccy.Currencies {
+				mes = mes + fmt.Sprintf("\n%s/%s buy: %s, sale: %s\n", c.Ccy, c.BaseCcy, c.Buy, c.Sale)
+			}
+			bot.Send(tgbotapi.NewMessage(
+				update.Message.Chat.ID,
+				mes,
+			))
+		} else {
+			bot.Send(tgbotapi.NewMessage(
+				update.Message.Chat.ID,
+				"there is only privat exchange rate",
+			))
+		}
+	}
+
+	return nil
+}
+
+type HandlerPrivat struct {
+	URL  string
+	Tmpl *template.Template
+}
+
+func getAllCashCurrencies(urlAPI string) (*CashCurrencies, error) {
+	ch := make(chan Result, 1)
+	wg := &sync.WaitGroup{}
+	for i := 1; i <= 10; i++ {
+		wg.Add(1)
+		go getCashCurrencies(wg, i, ch, urlAPI+strconv.Itoa(i))
+		// if err != nil {
+		// 	fmt.Printf("error happned for coursid = [%d]\n", i, err)
+		// 	continue
+		// }
+	}
+	go func() {
+		wg.Wait()
+		close(ch)
+	}()
+	ccy := []*CashCurrency{}
+	errAPI := ""
+	for r := range ch {
+		if r.CashCurrencies != nil {
+			ccy = append(ccy, r.CashCurrencies.Currencies...)
+			errAPI = fmt.Sprintf("%s \n %s", errAPI, r.Error)
+		}
+	}
+	if len(ccy) > 0 {
+		return &CashCurrencies{Currencies: ccy}, nil
+	} else {
+		return nil, fmt.Errorf(errAPI)
+	}
+}
+
+func (h *HandlerPrivat) handleCashCurrency(w http.ResponseWriter, r *http.Request) {
+	ccy, err := getAllCashCurrencies(PRIVAT_CASH_CURRENCY_API_URL)
+	if ccy != nil {
+		h.Tmpl.ExecuteTemplate(w, "cashCurrency.html",
+			struct {
+				CashCurrencies *CashCurrencies
+				IsError        bool
+				Error          string
+			}{
+				CashCurrencies: ccy,
+				IsError:        false,
+				Error:          "",
+			})
+	} else {
+		h.Tmpl.ExecuteTemplate(w, "cashCurrency.html",
+			struct {
+				CashCurrencies *CashCurrencies
+				IsError        bool
+				Error          string
+			}{
+				CashCurrencies: nil,
+				IsError:        true,
+				Error:          err.Error(),
+			})
+	}
+}
+
 func main() {
 
 	port := os.Getenv("PORT")
@@ -136,66 +248,19 @@ func main() {
 		panic(err)
 	}
 
-	http.HandleFunc("/cashcurrency", func(w http.ResponseWriter, r *http.Request) {
+	privatHandler := &HandlerPrivat{
+		URL:  PRIVAT_CASH_CURRENCY_API_URL,
+		Tmpl: tmpl,
+	}
 
-		coursId := r.URL.Query().Get("coursid")
-		_, err := strconv.ParseInt(coursId, 10, 32)
-		if err != nil {
-			fmt.Fprintln(w, "can't parse get params")
-			return
-		}
-		ch := make(chan Result, 1)
-		wg := &sync.WaitGroup{}
-		for i := 1; i <= 10; i++ {
-			wg.Add(1)
-			go getCashCurrencies(wg, i, ch, PRIVAT_CASH_CURRENCY_API_URL+strconv.Itoa(i))
-			// if err != nil {
-			// 	fmt.Printf("error happned for coursid = [%d]\n", i, err)
-			// 	continue
-			// }
-		}
-		go func() {
-			wg.Wait()
-			close(ch)
-		}()
-		ccy := []*CashCurrency{}
-		errAPI := ""
-		for r := range ch {
-			if r.CashCurrencies != nil {
-				ccy = append(ccy, r.CashCurrencies.Currencies...)
-				errAPI = fmt.Sprintf("%s \n %s", errAPI, r.Error)
-			}
-		}
-
-		if len(ccy) > 0 {
-			tmpl.ExecuteTemplate(w, "cashCurrency.html",
-				struct {
-					CashCurrencies *CashCurrencies
-					IsError        bool
-					Error          string
-				}{
-					CashCurrencies: &CashCurrencies{Currencies: ccy},
-					IsError:        false,
-					Error:          "",
-				})
-		} else {
-			tmpl.ExecuteTemplate(w, "cashCurrency.html",
-				struct {
-					CashCurrencies *CashCurrencies
-					IsError        bool
-					Error          string
-				}{
-					CashCurrencies: nil,
-					IsError:        true,
-					Error:          errAPI,
-				})
-		}
-	})
+	http.HandleFunc("/cashcurrency", privatHandler.handleCashCurrency)
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(w, "Hello guys!")
 		fmt.Fprintln(w, "Do you want to know exchange rates for currencies from privatbank?")
 		fmt.Fprintln(w, "Go to `/cachscurrency`")
 	})
+
+	go useBot()
 
 	fmt.Println("starting server at :", port)
 	http.ListenAndServe(":"+port, nil)
