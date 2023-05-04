@@ -3,11 +3,13 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"html/template"
 	"io"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
+	"sync"
+	"text/template"
 )
 
 const (
@@ -30,24 +32,43 @@ type ErrorAPI struct {
 	Message string `json:"message"`
 }
 
-func getCashCurrencies(url string) (*CashCurrencies, error) {
+type Result struct {
+	CashCurrencies *CashCurrencies
+	Error          error
+}
+
+func getCashCurrencies(wg *sync.WaitGroup, workerNum int, ch chan Result, url string) /*(*CashCurrencies, error)*/ {
+	defer wg.Done()
+
 	resp, err := http.Get(url)
 	if err != nil {
 		fmt.Println("error happend", err)
-		return nil, err
+		ch <- Result{
+			CashCurrencies: nil,
+			Error:          err,
+		}
+		return //nil, err
 	}
 	defer resp.Body.Close()
 
 	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
 		fmt.Println("error happend", err)
-		return nil, err
+		ch <- Result{
+			CashCurrencies: nil,
+			Error:          err,
+		}
+		return //nil, err
 	}
 	fmt.Printf("resp Body: %s\n", string(respBody))
 
 	if !strings.Contains(resp.Header.Get("Content-Type"), "application/json") {
 		fmt.Printf("response don't have json: %s", respBody)
-		return nil, fmt.Errorf("wrong response: %s", respBody)
+		ch <- Result{
+			CashCurrencies: nil,
+			Error:          fmt.Errorf("wrong response: %s", respBody),
+		}
+		return //nil, fmt.Errorf("wrong response: %s", respBody)
 	}
 
 	var ccy []*CashCurrency
@@ -56,16 +77,30 @@ func getCashCurrencies(url string) (*CashCurrencies, error) {
 		err = json.Unmarshal(respBody, &ccy)
 		if err != nil {
 			fmt.Println("error happned", err)
-			return nil, err
+			ch <- Result{
+				CashCurrencies: nil,
+				Error:          err,
+			}
+			return //nil, err
 		}
 	} else {
 		err = json.Unmarshal(respBody, &errAPI)
 		if err != nil {
 			fmt.Println("json error", err)
-			return nil, err
+
+			ch <- Result{
+				CashCurrencies: nil,
+				Error:          err,
+			}
+			return //nil, err
 		}
 		fmt.Println("get error from service", errAPI)
-		return nil, fmt.Errorf(errAPI.Message)
+
+		ch <- Result{
+			CashCurrencies: nil,
+			Error:          fmt.Errorf(errAPI.Message),
+		}
+		return //nil, fmt.Errorf(errAPI.Message)
 	}
 
 	for _, item := range ccy {
@@ -82,10 +117,19 @@ func getCashCurrencies(url string) (*CashCurrencies, error) {
 		fmt.Printf("currencies: %s/%s buy - %f, sale: %f: \n", item.Ccy, item.BaseCcy, buy, sale)
 	}
 
-	return &CashCurrencies{Currencies: ccy}, nil
+	ch <- Result{
+		CashCurrencies: &CashCurrencies{
+			Currencies: ccy,
+		},
+		Error: nil,
+	}
+	//return //&CashCurrencies{Currencies: ccy}, nil
+	fmt.Println("workerNum finished = ", workerNum)
 }
 
 func main() {
+
+	port := os.Getenv("PORT")
 
 	tmpl, err := template.New("").ParseFiles("cashCurrency.html")
 	if err != nil {
@@ -100,16 +144,37 @@ func main() {
 			fmt.Fprintln(w, "can't parse get params")
 			return
 		}
-		cashCcy, err := getCashCurrencies(PRIVAT_CASH_CURRENCY_API_URL + coursId)
+		ch := make(chan Result, 1)
+		wg := &sync.WaitGroup{}
+		for i := 1; i <= 10; i++ {
+			wg.Add(1)
+			go getCashCurrencies(wg, i, ch, PRIVAT_CASH_CURRENCY_API_URL+strconv.Itoa(i))
+			// if err != nil {
+			// 	fmt.Printf("error happned for coursid = [%d]\n", i, err)
+			// 	continue
+			// }
+		}
+		go func() {
+			wg.Wait()
+			close(ch)
+		}()
+		ccy := []*CashCurrency{}
+		errAPI := ""
+		for r := range ch {
+			if r.CashCurrencies != nil {
+				ccy = append(ccy, r.CashCurrencies.Currencies...)
+				errAPI = fmt.Sprintf("%s \n %s", errAPI, r.Error)
+			}
+		}
 
-		if cashCcy != nil {
+		if len(ccy) > 0 {
 			tmpl.ExecuteTemplate(w, "cashCurrency.html",
 				struct {
 					CashCurrencies *CashCurrencies
 					IsError        bool
 					Error          string
 				}{
-					CashCurrencies: cashCcy,
+					CashCurrencies: &CashCurrencies{Currencies: ccy},
 					IsError:        false,
 					Error:          "",
 				})
@@ -122,7 +187,7 @@ func main() {
 				}{
 					CashCurrencies: nil,
 					IsError:        true,
-					Error:          err.Error(),
+					Error:          errAPI,
 				})
 		}
 	})
@@ -132,6 +197,6 @@ func main() {
 		fmt.Fprintln(w, "Go to `/cachscurrency`")
 	})
 
-	fmt.Println("starting server at :8080")
-	http.ListenAndServe(":8080", nil)
+	fmt.Println("starting server at :", port)
+	http.ListenAndServe(":"+port, nil)
 }
