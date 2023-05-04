@@ -150,7 +150,7 @@ func useBot() error {
 	if err != nil {
 		return err
 	}
-	updates := bot.ListenForWebhook("/")
+	updates := bot.ListenForWebhook("/bot")
 
 	for update := range updates {
 		if url, ok := bank[update.Message.Text]; ok {
@@ -260,8 +260,8 @@ func main() {
 		fmt.Fprintln(w, "Go to `/cachscurrency`")
 	})
 
-	go useBot()
-
 	fmt.Println("starting server at :", port)
 	http.ListenAndServe(":"+port, nil)
+
+	useBot()
 }
