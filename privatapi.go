@@ -150,7 +150,7 @@ func useBot() error {
 	if err != nil {
 		return err
 	}
-	updates := bot.ListenForWebhook("/bot")
+	updates := bot.ListenForWebhook("/")
 
 	for update := range updates {
 		if url, ok := bank[update.Message.Text]; ok {
