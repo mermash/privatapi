@@ -11,7 +11,7 @@ import (
 	"sync"
 	"text/template"
 
-	tgbotapi "gopkg.in/telegram-bot-api.v4"
+	_ "net/http/pprof"
 )
 
 const (
@@ -138,45 +138,6 @@ var bank map[string]string = map[string]string{
 	"Privat": PRIVAT_CASH_CURRENCY_API_URL,
 }
 
-func useBot() error {
-	bot, err := tgbotapi.NewBotAPI(BotToken)
-	if err != nil {
-		return err
-	}
-
-	fmt.Println("Authorized on account", bot.Self.UserName)
-
-	_, err = bot.SetWebhook(tgbotapi.NewWebhook(WebhookURL))
-	if err != nil {
-		return err
-	}
-	updates := bot.ListenForWebhook("/bot")
-
-	for update := range updates {
-		if url, ok := bank[update.Message.Text]; ok {
-			ccy, err := getAllCashCurrencies(url)
-			if err != nil {
-				return err
-			}
-			mes := ""
-			for _, c := range ccy.Currencies {
-				mes = mes + fmt.Sprintf("\n%s/%s buy: %s, sale: %s\n", c.Ccy, c.BaseCcy, c.Buy, c.Sale)
-			}
-			bot.Send(tgbotapi.NewMessage(
-				update.Message.Chat.ID,
-				mes,
-			))
-		} else {
-			bot.Send(tgbotapi.NewMessage(
-				update.Message.Chat.ID,
-				"there is only privat exchange rate",
-			))
-		}
-	}
-
-	return nil
-}
-
 type HandlerPrivat struct {
 	URL  string
 	Tmpl *template.Template
@@ -262,6 +223,4 @@ func main() {
 
 	fmt.Println("starting server at :", port)
 	http.ListenAndServe(":"+port, nil)
-
-	useBot()
 }
