@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"strconv"
@@ -12,10 +13,8 @@ import (
 	"text/template"
 
 	_ "net/http/pprof"
-)
 
-const (
-	PRIVAT_CASH_CURRENCY_API_URL = "https://api.privatbank.ua/p24api/pubinfo?json&exchange&coursid="
+	"github.com/joho/godotenv"
 )
 
 type CashCurrency struct {
@@ -129,15 +128,6 @@ func getCashCurrencies(wg *sync.WaitGroup, workerNum int, ch chan Result, url st
 	fmt.Println("workerNum finished = ", workerNum)
 }
 
-const (
-	BotToken   = "6039361130:AAGwrJcWrrIRtU96TtFAT4gX91A3kVDrLGk"
-	WebhookURL = "https://app-golang-bot.herokuapp.com"
-)
-
-var bank map[string]string = map[string]string{
-	"Privat": PRIVAT_CASH_CURRENCY_API_URL,
-}
-
 type HandlerPrivat struct {
 	URL  string
 	Tmpl *template.Template
@@ -174,7 +164,7 @@ func getAllCashCurrencies(urlAPI string) (*CashCurrencies, error) {
 }
 
 func (h *HandlerPrivat) handleCashCurrency(w http.ResponseWriter, r *http.Request) {
-	ccy, err := getAllCashCurrencies(PRIVAT_CASH_CURRENCY_API_URL)
+	ccy, err := getAllCashCurrencies(h.URL)
 	if ccy != nil {
 		h.Tmpl.ExecuteTemplate(w, "cashCurrency.html",
 			struct {
@@ -202,7 +192,16 @@ func (h *HandlerPrivat) handleCashCurrency(w http.ResponseWriter, r *http.Reques
 
 func main() {
 
+	_, err := os.Stat(".env")
+	if err == nil {
+		err := godotenv.Load(".env")
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+
 	port := os.Getenv("PORT")
+	url := os.Getenv("PRIVAT_CASH_CURRENCY_API_URL")
 
 	tmpl, err := template.New("").ParseFiles("cashCurrency.html")
 	if err != nil {
@@ -210,7 +209,7 @@ func main() {
 	}
 
 	privatHandler := &HandlerPrivat{
-		URL:  PRIVAT_CASH_CURRENCY_API_URL,
+		URL:  url,
 		Tmpl: tmpl,
 	}
 
