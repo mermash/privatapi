@@ -19,11 +19,24 @@ cpu:
 .PHONY: goroutine
 goroutine:
 	@echo "after underpress"
-	@echo "-- cpu profile commit=${COMMIT} build_time=${BUILD_TIME}"
+	@echo "-- goroutine commit=${COMMIT} build_time=${BUILD_TIME}"
 	curl "$(GOROUTINE_URL)" -o goroutine_out
+
+.PHONY: trace
+trace:
+	@echo "after underpress"
+	@echo "-- get trace commit=${COMMIT} build_time=${BUILD_TIME}"
+	curl "$(TRACE_URL)" -o trace_out
+
+.PHONY: show_trace
+show_trace:
+	@echo "after trace"
+	@echo "-- show trace commit=${COMMIT} build_time=${BUILD_TIME}"
+	go tool trace -http "$(RESEARCH_TRACE_URL)" privatapi trace_out
 
 .PHONY: underpress
 underpress:
+	@echo "run apache benchmark"
 	@echo "-- underpress app $(APP_URL) commit=${COMMIT} build_time=${BUILD_TIME}"
 	ab -t 50 -n 10 -c 5 "$(APP_URL)"
 
