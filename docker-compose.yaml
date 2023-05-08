@@ -1,0 +1,10 @@
+version: '3'
+
+services:
+  go-privatapi-pprof:
+    image: mermash/go-privatapi-pprof
+    build: .
+    stdin_open: true
+    tty: true
+    volumes:
+      - ./data/:/home/app/data
