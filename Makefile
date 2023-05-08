@@ -1,8 +1,8 @@
 COMMIT?=$(shell git rev-parse --short HEAD)
 BUILD_TIME?=$(shell date -u '+%Y-%m-%d_%H:%M:%S')
-APP_URL=https://app-golang-bot.herokuapp.com/cashcurrency?coursid=1
-HEAP_URL=https://app-golang-bot.herokuapp.com/debug/pprof/heap
-CPU_URL=https://app-golang-bot.herokuapp.com/debug/pprof/profile?seconds=5
+
+include .env
+export
 
 .PHONY: mem
 mem:
@@ -16,7 +16,7 @@ cpu:
 
 .PHONY: underpress
 underpress:
-	@echo "-- underpress app commit=${COMMIT} build_time=${BUILD_TIME}"
+	@echo "-- underpress app $(APP_URL) commit=${COMMIT} build_time=${BUILD_TIME}"
 	ab -t 50 -n 10 -c 5 "$(APP_URL)"
 
 .PHONY: build
