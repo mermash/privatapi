@@ -6,13 +6,21 @@ export
 
 .PHONY: mem
 mem:
+	@echo "after underpress"
 	@echo "-- map profile commit=${COMMIT} build_time=${BUILD_TIME}"
 	curl "$(HEAP_URL)" -o mem_out 
 
 .PHONY: cpu
 cpu:
+	@echo "after underpress"
 	@echo "-- cpu profile commit=${COMMIT} build_time=${BUILD_TIME}"
 	curl "$(CPU_URL)" -o cpu_out
+
+.PHONY: goroutine
+goroutine:
+	@echo "after underpress"
+	@echo "-- cpu profile commit=${COMMIT} build_time=${BUILD_TIME}"
+	curl "$(GOROUTINE_URL)" -o goroutine_out
 
 .PHONY: underpress
 underpress:

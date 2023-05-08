@@ -1,0 +1,107 @@
+goroutine 465 [running]:
+runtime/pprof.writeGoroutineStacks({0x8aa720, 0xc0004b4000})
+	/tmp/codon/tmp/cache/go1.20.3/go/src/runtime/pprof/pprof.go:703 +0x70
+runtime/pprof.writeGoroutine({0x8aa720?, 0xc0004b4000?}, 0xc000160400?)
+	/tmp/codon/tmp/cache/go1.20.3/go/src/runtime/pprof/pprof.go:692 +0x2b
+runtime/pprof.(*Profile).WriteTo(0x7e4220?, {0x8aa720?, 0xc0004b4000?}, 0xc?)
+	/tmp/codon/tmp/cache/go1.20.3/go/src/runtime/pprof/pprof.go:329 +0x14b
+net/http/pprof.handler.ServeHTTP({0xc00001e071, 0x9}, {0x8acd80, 0xc0004b4000}, 0xd?)
+	/tmp/codon/tmp/cache/go1.20.3/go/src/net/http/pprof/pprof.go:259 +0x4a5
+net/http/pprof.Index({0x8acd80?, 0xc0004b4000}, 0xc00062a300?)
+	/tmp/codon/tmp/cache/go1.20.3/go/src/net/http/pprof/pprof.go:376 +0xf3
+net/http.HandlerFunc.ServeHTTP(0xc000622180?, {0x8acd80?, 0xc0004b4000?}, 0x40f448?)
+	/tmp/codon/tmp/cache/go1.20.3/go/src/net/http/server.go:2122 +0x2f
+net/http.(*ServeMux).ServeHTTP(0xc00001e07b?, {0x8acd80, 0xc0004b4000}, 0xc00062a300)
+	/tmp/codon/tmp/cache/go1.20.3/go/src/net/http/server.go:2500 +0x149
+net/http.serverHandler.ServeHTTP({0xc00028b680?}, {0x8acd80, 0xc0004b4000}, 0xc00062a300)
+	/tmp/codon/tmp/cache/go1.20.3/go/src/net/http/server.go:2936 +0x316
+net/http.(*conn).serve(0xc0002c2e10, {0x8ad038, 0xc00009bda0})
+	/tmp/codon/tmp/cache/go1.20.3/go/src/net/http/server.go:1995 +0x612
+created by net/http.(*Server).Serve
+	/tmp/codon/tmp/cache/go1.20.3/go/src/net/http/server.go:3089 +0x5ed
+
+goroutine 1 [IO wait]:
+internal/poll.runtime_pollWait(0x7f8270791018, 0x72)
+	/tmp/codon/tmp/cache/go1.20.3/go/src/runtime/netpoll.go:306 +0x89
+internal/poll.(*pollDesc).wait(0xc0000fce80?, 0x4?, 0x0)
+	/tmp/codon/tmp/cache/go1.20.3/go/src/internal/poll/fd_poll_runtime.go:84 +0x32
+internal/poll.(*pollDesc).waitRead(...)
+	/tmp/codon/tmp/cache/go1.20.3/go/src/internal/poll/fd_poll_runtime.go:89
+internal/poll.(*FD).Accept(0xc0000fce80)
+	/tmp/codon/tmp/cache/go1.20.3/go/src/internal/poll/fd_unix.go:614 +0x2bd
+net.(*netFD).accept(0xc0000fce80)
+	/tmp/codon/tmp/cache/go1.20.3/go/src/net/fd_unix.go:172 +0x35
+net.(*TCPListener).accept(0xc0000a2120)
+	/tmp/codon/tmp/cache/go1.20.3/go/src/net/tcpsock_posix.go:148 +0x25
+net.(*TCPListener).Accept(0xc0000a2120)
+	/tmp/codon/tmp/cache/go1.20.3/go/src/net/tcpsock.go:297 +0x3d
+net/http.(*Server).Serve(0xc000136000, {0x8acb70, 0xc0000a2120})
+	/tmp/codon/tmp/cache/go1.20.3/go/src/net/http/server.go:3059 +0x385
+net/http.(*Server).ListenAndServe(0xc000136000)
+	/tmp/codon/tmp/cache/go1.20.3/go/src/net/http/server.go:2988 +0x7d
+net/http.ListenAndServe(...)
+	/tmp/codon/tmp/cache/go1.20.3/go/src/net/http/server.go:3242
+main.main()
+	/tmp/build_d941d5f7/privatapi.go:224 +0x3b9
+
+goroutine 562 [runnable]:
+syscall.Syscall(0x0?, 0x0?, 0x4d6b72?, 0x7ffff800000?)
+	/tmp/codon/tmp/cache/go1.20.3/go/src/syscall/syscall_linux.go:69 +0x27
+syscall.read(0xc000622180?, {0xc00028b691?, 0x0?, 0x0?})
+	/tmp/codon/tmp/cache/go1.20.3/go/src/syscall/zsyscall_linux_amd64.go:711 +0x45
+syscall.Read(...)
+	/tmp/codon/tmp/cache/go1.20.3/go/src/syscall/syscall_unix.go:178
+internal/poll.ignoringEINTRIO(...)
+	/tmp/codon/tmp/cache/go1.20.3/go/src/internal/poll/fd_unix.go:794
+internal/poll.(*FD).Read(0xc000622180?, {0xc00028b691?, 0x1?, 0x1?})
+	/tmp/codon/tmp/cache/go1.20.3/go/src/internal/poll/fd_unix.go:163 +0x2ce
+net.(*netFD).Read(0xc000622180, {0xc00028b691?, 0x15?, 0x0?})
+	/tmp/codon/tmp/cache/go1.20.3/go/src/net/fd_posix.go:55 +0x29
+net.(*conn).Read(0xc000386050, {0xc00028b691?, 0xc0000d0198?, 0x15?})
+	/tmp/codon/tmp/cache/go1.20.3/go/src/net/net.go:183 +0x45
+net/http.(*connReader).backgroundRead(0xc00028b680)
+	/tmp/codon/tmp/cache/go1.20.3/go/src/net/http/server.go:674 +0x3f
+created by net/http.(*connReader).startBackgroundRead
+	/tmp/codon/tmp/cache/go1.20.3/go/src/net/http/server.go:670 +0xca
+
+goroutine 72 [IO wait]:
+internal/poll.runtime_pollWait(0x7f8270790c58, 0x72)
+	/tmp/codon/tmp/cache/go1.20.3/go/src/runtime/netpoll.go:306 +0x89
+internal/poll.(*pollDesc).wait(0xc0001aa280?, 0xc000409000?, 0x0)
+	/tmp/codon/tmp/cache/go1.20.3/go/src/internal/poll/fd_poll_runtime.go:84 +0x32
+internal/poll.(*pollDesc).waitRead(...)
+	/tmp/codon/tmp/cache/go1.20.3/go/src/internal/poll/fd_poll_runtime.go:89
+internal/poll.(*FD).Read(0xc0001aa280, {0xc000409000, 0x1800, 0x1800})
+	/tmp/codon/tmp/cache/go1.20.3/go/src/internal/poll/fd_unix.go:167 +0x299
+net.(*netFD).Read(0xc0001aa280, {0xc000409000?, 0xc00040900d?, 0x19?})
+	/tmp/codon/tmp/cache/go1.20.3/go/src/net/fd_posix.go:55 +0x29
+net.(*conn).Read(0xc000194038, {0xc000409000?, 0x17f3?, 0xc000409005?})
+	/tmp/codon/tmp/cache/go1.20.3/go/src/net/net.go:183 +0x45
+crypto/tls.(*atLeastReader).Read(0xc000610720, {0xc000409000?, 0xc000610720?, 0x0?})
+	/tmp/codon/tmp/cache/go1.20.3/go/src/crypto/tls/conn.go:788 +0x3d
+bytes.(*Buffer).ReadFrom(0xc0001c6610, {0x8aa120, 0xc000610720})
+	/tmp/codon/tmp/cache/go1.20.3/go/src/bytes/buffer.go:202 +0x98
+crypto/tls.(*Conn).readFromUntil(0xc0001c6380, {0x8aa460?, 0xc000194038}, 0x1800?)
+	/tmp/codon/tmp/cache/go1.20.3/go/src/crypto/tls/conn.go:810 +0xe5
+crypto/tls.(*Conn).readRecordOrCCS(0xc0001c6380, 0x0)
+	/tmp/codon/tmp/cache/go1.20.3/go/src/crypto/tls/conn.go:617 +0x116
+crypto/tls.(*Conn).readRecord(...)
+	/tmp/codon/tmp/cache/go1.20.3/go/src/crypto/tls/conn.go:583
+crypto/tls.(*Conn).Read(0xc0001c6380, {0xc00014b000, 0x1000, 0x6a1960?})
+	/tmp/codon/tmp/cache/go1.20.3/go/src/crypto/tls/conn.go:1316 +0x16f
+bufio.(*Reader).Read(0xc0005a0660, {0xc0005d4200, 0x9, 0x6bf5e5?})
+	/tmp/codon/tmp/cache/go1.20.3/go/src/bufio/bufio.go:237 +0x1bb
+io.ReadAtLeast({0x8a9f60, 0xc0005a0660}, {0xc0005d4200, 0x9, 0x9}, 0x9)
+	/tmp/codon/tmp/cache/go1.20.3/go/src/io/io.go:332 +0x9a
+io.ReadFull(...)
+	/tmp/codon/tmp/cache/go1.20.3/go/src/io/io.go:351
+net/http.http2readFrameHeader({0xc0005d4200?, 0x9?, 0xc0003470e0?}, {0x8a9f60?, 0xc0005a0660?})
+	/tmp/codon/tmp/cache/go1.20.3/go/src/net/http/h2_bundle.go:1567 +0x6e
+net/http.(*http2Framer).ReadFrame(0xc0005d41c0)
+	/tmp/codon/tmp/cache/go1.20.3/go/src/net/http/h2_bundle.go:1831 +0x95
+net/http.(*http2clientConnReadLoop).run(0xc000171f98)
+	/tmp/codon/tmp/cache/go1.20.3/go/src/net/http/h2_bundle.go:9187 +0x12e
+net/http.(*http2ClientConn).readLoop(0xc000002000)
+	/tmp/codon/tmp/cache/go1.20.3/go/src/net/http/h2_bundle.go:9082 +0x6f
+created by net/http.(*http2Transport).newClientConn
+	/tmp/codon/tmp/cache/go1.20.3/go/src/net/http/h2_bundle.go:7779 +0xc3c
